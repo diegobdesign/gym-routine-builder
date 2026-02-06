@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useWorkoutPlayer } from "@/stores/workout-player";
 import { WorkSetScreen } from "@/components/workout/work-set-screen";
 import { RestScreen } from "@/components/workout/rest-screen";
+import { HydrationReminder } from "@/components/workout/hydration-reminder";
 import { WorkoutSummary } from "@/components/workout/workout-summary";
 import type { WorkoutSet } from "@/types";
 
@@ -100,6 +101,7 @@ export default function WorkoutPlayerPage() {
     adjustRestTime,
     togglePause,
     skipRest,
+    dismissHydration,
     setCurrentWeight,
     resetWorkout,
   } = useWorkoutPlayer();
@@ -285,6 +287,22 @@ export default function WorkoutPlayerPage() {
                 onAdjust={adjustRestTime}
                 onTogglePause={togglePause}
                 onSkip={skipRest}
+              />
+            </motion.div>
+          )}
+
+          {phase === "hydrating" && (
+            <motion.div
+              key="hydrating"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              <HydrationReminder
+                nextMachineName={nextItem?.machine.name}
+                onDismiss={dismissHydration}
               />
             </motion.div>
           )}

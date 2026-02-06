@@ -74,7 +74,7 @@ export interface RoutineItemFormData {
 }
 
 // Workout player state
-export type WorkoutPhase = 'idle' | 'working' | 'resting' | 'summary';
+export type WorkoutPhase = 'idle' | 'working' | 'resting' | 'hydrating' | 'summary';
 
 export interface WorkoutPlayerState {
   sessionId: string | null;

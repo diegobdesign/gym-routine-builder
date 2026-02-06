@@ -26,6 +26,7 @@ interface WorkoutPlayerState {
   adjustRestTime: (seconds: number) => void;
   togglePause: () => void;
   skipRest: () => void;
+  dismissHydration: () => void;
   nextExercise: () => void;
   setCurrentWeight: (weight: number) => void;
   resetWorkout: () => void;
@@ -173,8 +174,12 @@ export const useWorkoutPlayer = create<WorkoutPlayerState>((set, get) => ({
     );
 
     if (setsForCurrentItem.length >= currentItem.sets) {
-      // Move to next exercise
-      get().nextExercise();
+      // Move to hydration screen before next exercise
+      set({
+        phase: "hydrating",
+        restTimeRemaining: 0,
+        isPaused: false,
+      });
     } else {
       // Continue with more sets
       set({
@@ -183,6 +188,10 @@ export const useWorkoutPlayer = create<WorkoutPlayerState>((set, get) => ({
         isPaused: false,
       });
     }
+  },
+
+  dismissHydration: () => {
+    get().nextExercise();
   },
 
   nextExercise: () => {
