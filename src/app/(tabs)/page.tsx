@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Dumbbell } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StartWorkoutButton } from "@/components/routines/start-workout-button";
-import { formatRelativeDate } from "@/lib/utils";
-import type { RoutineWithItems, WorkoutSession } from "@/types";
+import { WorkoutHistoryCard } from "@/components/workout/workout-history-card";
+import { WorkoutHistoryModal } from "@/components/workout/workout-history-modal";
+import type { RoutineWithItems, WorkoutSessionWithDetails } from "@/types";
 
 async function fetchDefaultRoutine(): Promise<RoutineWithItems | null> {
   const res = await fetch("/api/routines?default=true");
@@ -17,24 +19,26 @@ async function fetchDefaultRoutine(): Promise<RoutineWithItems | null> {
   return data.length > 0 ? data[0] : null;
 }
 
-async function fetchLastWorkout(): Promise<WorkoutSession | null> {
-  const res = await fetch("/api/workouts/latest");
-  if (!res.ok) return null;
+async function fetchWorkoutHistory(): Promise<WorkoutSessionWithDetails[]> {
+  const res = await fetch("/api/workouts/history");
+  if (!res.ok) return [];
   return res.json();
 }
 
 export default function TodayPage() {
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutSessionWithDetails | null>(null);
+
   const { data: defaultRoutine, isLoading: loadingRoutine } = useQuery({
     queryKey: ["defaultRoutine"],
     queryFn: fetchDefaultRoutine,
   });
 
-  const { data: lastWorkout, isLoading: loadingWorkout } = useQuery({
-    queryKey: ["lastWorkout"],
-    queryFn: fetchLastWorkout,
+  const { data: workoutHistory = [], isLoading: loadingHistory } = useQuery({
+    queryKey: ["workoutHistory"],
+    queryFn: fetchWorkoutHistory,
   });
 
-  const isLoading = loadingRoutine || loadingWorkout;
+  const isLoading = loadingRoutine || loadingHistory;
 
   return (
     <div className="p-4 space-y-6">
@@ -48,84 +52,93 @@ export default function TodayPage() {
           <div className="h-40 bg-bg-card rounded-2xl animate-pulse" />
           <div className="h-24 bg-bg-card rounded-2xl animate-pulse" />
         </div>
-      ) : defaultRoutine ? (
+      ) : (
         <>
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-sm text-text-secondary mb-1">
-                      Next Routine
-                    </p>
-                    <h2 className="text-xl font-semibold text-text-primary">
-                      {defaultRoutine.name}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-1 text-text-secondary">
-                    <Dumbbell className="w-4 h-4" />
-                    <span className="text-sm">
-                      {defaultRoutine.routine_items?.length || 0} machines
-                    </span>
-                  </div>
-                </div>
-
-                {defaultRoutine.routine_items &&
-                  defaultRoutine.routine_items.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {defaultRoutine.routine_items.slice(0, 4).map((item) => (
-                        <span
-                          key={item.id}
-                          className="px-3 py-1 text-sm bg-bg-input rounded-lg text-text-secondary"
-                        >
-                          {item.machine.name}
-                        </span>
-                      ))}
-                      {defaultRoutine.routine_items.length > 4 && (
-                        <span className="px-3 py-1 text-sm bg-bg-input rounded-lg text-text-secondary">
-                          +{defaultRoutine.routine_items.length - 4} more
-                        </span>
-                      )}
+          {defaultRoutine ? (
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-text-secondary mb-1">
+                        Next Routine
+                      </p>
+                      <h2 className="text-xl font-semibold text-text-primary">
+                        {defaultRoutine.name}
+                      </h2>
                     </div>
-                  )}
+                    <div className="flex items-center gap-1 text-text-secondary">
+                      <Dumbbell className="w-4 h-4" />
+                      <span className="text-sm">
+                        {defaultRoutine.routine_items?.length || 0} machines
+                      </span>
+                    </div>
+                  </div>
 
-                <StartWorkoutButton
-                  routineId={defaultRoutine.id}
-                  size="lg"
-                  className="w-full"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  {defaultRoutine.routine_items &&
+                    defaultRoutine.routine_items.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {defaultRoutine.routine_items.slice(0, 4).map((item) => (
+                          <span
+                            key={item.id}
+                            className="px-3 py-1 text-sm bg-bg-input rounded-lg text-text-secondary"
+                          >
+                            {item.machine.name}
+                          </span>
+                        ))}
+                        {defaultRoutine.routine_items.length > 4 && (
+                          <span className="px-3 py-1 text-sm bg-bg-input rounded-lg text-text-secondary">
+                            +{defaultRoutine.routine_items.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    )}
 
-          {lastWorkout && (
-            <Card>
-              <CardContent className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-bg-input flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-text-secondary" />
-                </div>
-                <div>
-                  <p className="text-sm text-text-secondary">Last workout</p>
-                  <p className="text-text-primary font-medium">
-                    {formatRelativeDate(lastWorkout.started_at)}
-                  </p>
+                  <StartWorkoutButton
+                    routineId={defaultRoutine.id}
+                    size="lg"
+                    className="w-full"
+                  />
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <EmptyState
+              icon={Dumbbell}
+              title="No routine selected"
+              description="Create a routine and set it as default to see it here"
+              action={
+                <Link href="/build">
+                  <Button>Create Routine</Button>
+                </Link>
+              }
+            />
+          )}
+
+          {workoutHistory.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-text-primary mb-3">
+                Recent Workouts
+              </h2>
+              <div className="space-y-3">
+                {workoutHistory.map((workout) => (
+                  <WorkoutHistoryCard
+                    key={workout.id}
+                    workout={workout}
+                    onClick={() => setSelectedWorkout(workout)}
+                  />
+                ))}
+              </div>
+            </section>
           )}
         </>
-      ) : (
-        <EmptyState
-          icon={Dumbbell}
-          title="No routine selected"
-          description="Create a routine and set it as default to see it here"
-          action={
-            <Link href="/build">
-              <Button>Create Routine</Button>
-            </Link>
-          }
-        />
       )}
+
+      <WorkoutHistoryModal
+        workout={selectedWorkout}
+        isOpen={!!selectedWorkout}
+        onClose={() => setSelectedWorkout(null)}
+      />
     </div>
   );
 }

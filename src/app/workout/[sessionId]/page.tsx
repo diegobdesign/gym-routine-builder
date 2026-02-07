@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWorkoutPlayer } from "@/stores/workout-player";
@@ -82,6 +82,7 @@ async function abandonWorkout(sessionId: string): Promise<void> {
 export default function WorkoutPlayerPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const sessionId = params.sessionId as string;
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -127,6 +128,7 @@ export default function WorkoutPlayerPage() {
   const finishMutation = useMutation({
     mutationFn: () => finishWorkout(sessionId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workoutHistory"] });
       resetWorkout();
       router.push("/");
     },

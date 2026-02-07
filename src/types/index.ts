@@ -59,6 +59,14 @@ export interface WorkoutSetWithItem extends WorkoutSet {
   routine_item: RoutineItemWithMachine;
 }
 
+export interface WorkoutSessionWithDetails extends WorkoutSession {
+  routine: Routine;
+  workout_sets: WorkoutSet[];
+  routine_items: RoutineItemWithMachine[];
+  duration_minutes: number;
+  total_weight: number;
+}
+
 // Form types
 export interface RoutineFormData {
   name: string;
