@@ -180,7 +180,7 @@ export default function RoutineDetailPage() {
                     </p>
                     <p className="text-sm text-text-secondary">
                       {item.sets} sets x {item.reps} reps
-                      {item.default_weight && ` @ ${item.default_weight} lbs`}
+                      {item.default_weight && ` @ ${item.default_weight} kg`}
                     </p>
                   </div>
                   <div className="text-right">

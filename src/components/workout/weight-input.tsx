@@ -40,7 +40,7 @@ export function WeightInput({ value, onChange, className }: WeightInputProps) {
             onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
             className="w-24 text-center text-4xl font-bold bg-transparent text-text-primary focus:outline-none"
           />
-          <span className="text-lg text-text-secondary">lbs</span>
+          <span className="text-lg text-text-secondary">kg</span>
         </div>
 
         <button

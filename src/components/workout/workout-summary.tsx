@@ -58,7 +58,7 @@ export function WorkoutSummary({
               <p className="text-2xl font-bold text-text-primary mb-1">
                 {totalWeight.toLocaleString()}
               </p>
-              <p className="text-xs text-text-secondary">Total lbs</p>
+              <p className="text-xs text-text-secondary">Total kg</p>
             </CardContent>
           </Card>
           <Card>
@@ -91,7 +91,7 @@ export function WorkoutSummary({
                     {sets.length > 0 && (
                       <>
                         <p className="font-medium text-text-primary">
-                          {sets.map((s) => s.weight).join(" / ")} lbs
+                          {sets.map((s) => s.weight).join(" / ")} kg
                         </p>
                         <p className="text-xs text-text-secondary">per set</p>
                       </>

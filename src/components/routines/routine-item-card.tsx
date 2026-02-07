@@ -62,7 +62,7 @@ export function RoutineItemCard({
               </div>
               <p className="text-sm text-text-secondary mt-1 ml-8">
                 {item.sets} sets x {item.reps} reps
-                {item.default_weight && ` @ ${item.default_weight} lbs`}
+                {item.default_weight && ` @ ${item.default_weight} kg`}
                 <span className="mx-2">·</span>
                 {item.rest_seconds}s rest
               </p>
