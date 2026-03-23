@@ -41,9 +41,13 @@ export function MachinePicker({
     enabled: isOpen,
   });
 
-  const filteredMachines = machines?.filter((machine) =>
-    machine.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredMachines = machines?.filter((machine) => {
+    const q = search.toLowerCase();
+    return (
+      machine.name.toLowerCase().includes(q) ||
+      (machine.brand && machine.brand.toLowerCase().includes(q))
+    );
+  });
 
   const groupedMachines = filteredMachines?.reduce(
     (acc, machine) => {
@@ -110,9 +114,16 @@ export function MachinePicker({
                           "flex items-center justify-between"
                         )}
                       >
-                        <span className="font-medium text-text-primary">
-                          {machine.name}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-text-primary">
+                            {machine.name}
+                          </span>
+                          {machine.brand && (
+                            <span className="text-sm text-text-secondary">
+                              {machine.brand}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>

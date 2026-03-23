@@ -2,6 +2,9 @@ export interface Machine {
   id: string;
   name: string;
   category: 'upper' | 'lower' | 'core' | 'cardio';
+  brand: string | null;
+  description: string | null;
+  video_url: string | null;
 }
 
 export interface Routine {

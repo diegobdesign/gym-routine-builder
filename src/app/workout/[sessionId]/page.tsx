@@ -33,6 +33,9 @@ interface WorkoutSessionData {
         id: string;
         name: string;
         category: string;
+        brand: string | null;
+        description: string | null;
+        video_url: string | null;
       };
     }>;
   };
@@ -151,6 +154,9 @@ export default function WorkoutPlayerPage() {
         machine: {
           ...item.machine,
           category: item.machine.category as 'upper' | 'lower' | 'core' | 'cardio',
+          brand: item.machine.brand ?? null,
+          description: item.machine.description ?? null,
+          video_url: item.machine.video_url ?? null,
         },
       }));
       initWorkout(sessionId, items, session.workout_sets || []);

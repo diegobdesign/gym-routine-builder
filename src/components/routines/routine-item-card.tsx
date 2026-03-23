@@ -59,6 +59,11 @@ export function RoutineItemCard({
                 <span className="font-medium text-text-primary">
                   {item.machine.name}
                 </span>
+                {item.machine.brand && (
+                  <span className="text-xs text-text-secondary">
+                    {item.machine.brand}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-text-secondary mt-1 ml-8">
                 {item.sets} sets x {item.reps} reps

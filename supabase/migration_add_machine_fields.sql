@@ -1,66 +1,18 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Migration: Add brand, description, and video_url to machines table
+-- Run this on existing databases to update the schema and seed data.
 
--- machines (seeded with FlyeFit gym machines)
-CREATE TABLE machines (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT UNIQUE NOT NULL,
-  category TEXT CHECK (category IN ('upper', 'lower', 'core', 'cardio')),
-  brand TEXT,
-  description TEXT,
-  video_url TEXT
+ALTER TABLE machines ADD COLUMN IF NOT EXISTS brand TEXT;
+ALTER TABLE machines ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE machines ADD COLUMN IF NOT EXISTS video_url TEXT;
+
+-- Remove old seed data
+DELETE FROM machines WHERE name IN (
+  'Chest Press', 'Lat Pulldown', 'Shoulder Press', 'Cable Row',
+  'Bicep Curl Machine', 'Tricep Pushdown', 'Leg Press', 'Leg Extension',
+  'Leg Curl', 'Calf Raise Machine', 'Cable Crunch', 'Treadmill'
 );
 
--- routines
-CREATE TABLE routines (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  notes TEXT,
-  is_default BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- routine_items (machines in a routine)
-CREATE TABLE routine_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  routine_id UUID REFERENCES routines(id) ON DELETE CASCADE,
-  machine_id UUID REFERENCES machines(id),
-  position INTEGER NOT NULL,
-  sets INTEGER DEFAULT 3,
-  reps INTEGER DEFAULT 10,
-  rest_seconds INTEGER DEFAULT 60,
-  default_weight NUMERIC
-);
-
--- workout_sessions
-CREATE TABLE workout_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  routine_id UUID REFERENCES routines(id),
-  started_at TIMESTAMPTZ DEFAULT NOW(),
-  ended_at TIMESTAMPTZ,
-  status TEXT DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'abandoned'))
-);
-
--- workout_sets (actual recorded weights)
-CREATE TABLE workout_sets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  session_id UUID REFERENCES workout_sessions(id) ON DELETE CASCADE,
-  routine_item_id UUID REFERENCES routine_items(id),
-  set_number INTEGER NOT NULL,
-  target_reps INTEGER NOT NULL,
-  actual_reps INTEGER,
-  weight NUMERIC NOT NULL,
-  completed_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create indexes for better query performance
-CREATE INDEX idx_routine_items_routine_id ON routine_items(routine_id);
-CREATE INDEX idx_routine_items_position ON routine_items(routine_id, position);
-CREATE INDEX idx_workout_sessions_routine_id ON workout_sessions(routine_id);
-CREATE INDEX idx_workout_sets_session_id ON workout_sets(session_id);
-
--- Seed machines data (FlyeFit gym machines)
+-- Insert FlyeFit gym machines (skip duplicates)
 INSERT INTO machines (name, category, brand, description, video_url) VALUES
   ('Treadmill', 'cardio', 'Life Fitness', 'Motorized belt for walking, jogging, and running with adjustable speed and incline.', 'https://www.youtube.com/watch?v=8iPEnn-ltC8'),
   ('Stairmaster', 'cardio', 'Shua', 'Revolving staircase simulator that builds lower-body endurance and cardiovascular fitness.', 'https://www.youtube.com/watch?v=VCIe9LOh5eY'),
@@ -89,19 +41,9 @@ INSERT INTO machines (name, category, brand, description, video_url) VALUES
   ('Plate Loaded Hack Squat', 'lower', 'Gymleco', 'Angled sled machine targeting the quads with a deep squatting motion using plates.', 'https://www.youtube.com/watch?v=0tn5K9NlCGc'),
   ('Plate Loaded Leg Press', 'lower', 'Gymleco', 'Seated press targeting the quads, glutes, and hamstrings by pushing a plate-loaded sled.', 'https://www.youtube.com/watch?v=IZxyjW7MPJQ'),
   ('Cable Machine - Bicep Curl', 'upper', 'Gymleco', 'Cable-based exercise isolating the biceps through a curling motion with constant tension.', 'https://www.youtube.com/watch?v=NFzTWp2qpiE'),
-  ('Cable Machine - Chest Fly', 'upper', 'Gymleco', 'Cable-based fly movement targeting the chest through a wide arcing motion.', 'https://www.youtube.com/watch?v=Iwe6AmxVf7o');
-
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Trigger to auto-update updated_at on routines
-CREATE TRIGGER update_routines_updated_at
-  BEFORE UPDATE ON routines
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  ('Cable Machine - Chest Fly', 'upper', 'Gymleco', 'Cable-based fly movement targeting the chest through a wide arcing motion.', 'https://www.youtube.com/watch?v=Iwe6AmxVf7o')
+ON CONFLICT (name) DO UPDATE SET
+  brand = EXCLUDED.brand,
+  description = EXCLUDED.description,
+  video_url = EXCLUDED.video_url,
+  category = EXCLUDED.category;

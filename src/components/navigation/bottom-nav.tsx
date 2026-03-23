@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, List, Wrench } from "lucide-react";
+import { Home, List, Dumbbell, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Today", icon: Home },
   { href: "/routines", label: "Routines", icon: List },
-  { href: "/build", label: "Build", icon: Wrench },
+  { href: "/machines", label: "Machines", icon: Dumbbell },
+  { href: "/metrics", label: "Metrics", icon: BarChart3 },
 ];
 
 export function BottomNav() {

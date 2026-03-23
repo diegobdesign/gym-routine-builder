@@ -1,6 +1,6 @@
 "use client";
 
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WeightInput } from "./weight-input";
 import type { RoutineItemWithMachine } from "@/types";
@@ -35,9 +35,21 @@ export function WorkSetScreen({
           {item.machine.name}
         </h1>
 
-        <p className="text-text-secondary text-center mb-8">
+        <p className="text-text-secondary text-center mb-4">
           Set {currentSet} of {totalSets} · {item.reps} reps
         </p>
+
+        {item.machine.video_url && (
+          <a
+            href={item.machine.video_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-accent-green hover:underline mb-8"
+          >
+            <Play className="w-4 h-4" />
+            How to use this machine
+          </a>
+        )}
 
         <WeightInput
           value={weight}
