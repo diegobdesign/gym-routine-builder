@@ -11,7 +11,7 @@ export async function POST(
     const { routine_item_id, set_number, target_reps, actual_reps, weight } =
       body;
 
-    if (!routine_item_id || !set_number || !weight) {
+    if (!routine_item_id || !set_number || (weight === undefined || weight === null)) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }

@@ -29,6 +29,7 @@ interface WorkoutPlayerState {
   dismissHydration: () => void;
   nextExercise: () => void;
   setCurrentWeight: (weight: number) => void;
+  moveExercise: (direction: "up" | "down" | "end") => void;
   resetWorkout: () => void;
 }
 
@@ -214,6 +215,42 @@ export const useWorkoutPlayer = create<WorkoutPlayerState>((set, get) => ({
   },
 
   setCurrentWeight: (weight) => set({ currentWeight: weight }),
+
+  moveExercise: (direction) => {
+    const state = get();
+    const { currentItemIndex, items } = state;
+
+    // Only allow reordering items that haven't been started yet
+    // (current item and items after it)
+    const newItems = [...items];
+    const idx = currentItemIndex;
+
+    if (direction === "up" && idx > 0) {
+      // Swap current with previous (only if previous has no completed sets)
+      const prevItem = newItems[idx - 1];
+      const prevSets = state.completedSets.filter(
+        (s) => s.routine_item_id === prevItem.id
+      );
+      if (prevSets.length > 0) return; // Can't move past a completed exercise
+
+      [newItems[idx - 1], newItems[idx]] = [newItems[idx], newItems[idx - 1]];
+      set({ items: newItems, currentItemIndex: idx - 1 });
+    } else if (direction === "down" && idx < items.length - 1) {
+      [newItems[idx], newItems[idx + 1]] = [newItems[idx + 1], newItems[idx]];
+      set({ items: newItems, currentItemIndex: idx + 1 });
+    } else if (direction === "end" && idx < items.length - 1) {
+      // Move current exercise to end
+      const [movedItem] = newItems.splice(idx, 1);
+      newItems.push(movedItem);
+      // currentItemIndex stays the same - now points to what was the next exercise
+      const nextItem = newItems[idx];
+      set({
+        items: newItems,
+        currentSetNumber: 1,
+        currentWeight: nextItem.default_weight || state.currentWeight,
+      });
+    }
+  },
 
   resetWorkout: () =>
     set({

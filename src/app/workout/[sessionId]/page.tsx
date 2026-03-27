@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, ChevronUp, ChevronDown, ArrowDownToLine } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWorkoutPlayer } from "@/stores/workout-player";
 import { WorkSetScreen } from "@/components/workout/work-set-screen";
@@ -107,6 +107,7 @@ export default function WorkoutPlayerPage() {
     skipRest,
     dismissHydration,
     setCurrentWeight,
+    moveExercise,
     resetWorkout,
   } = useWorkoutPlayer();
 
@@ -246,9 +247,39 @@ export default function WorkoutPlayerPage() {
           <h1 className="font-semibold text-text-primary">
             {session.routine.name}
           </h1>
-          <p className="text-sm text-text-secondary">
-            {currentItemIndex + 1} of {items.length} exercises
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-0.5">
+            <p className="text-sm text-text-secondary">
+              {currentItemIndex + 1} of {items.length} exercises
+            </p>
+            {phase === "working" && items.length > 1 && (
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => moveExercise("up")}
+                  disabled={currentItemIndex === 0}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-text-secondary hover:text-text-primary hover:bg-bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Move exercise up"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => moveExercise("down")}
+                  disabled={currentItemIndex >= items.length - 1}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-text-secondary hover:text-text-primary hover:bg-bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Move exercise down"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => moveExercise("end")}
+                  disabled={currentItemIndex >= items.length - 1}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-text-secondary hover:text-text-primary hover:bg-bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Skip to end"
+                >
+                  <ArrowDownToLine className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="w-10" /> {/* Spacer for centering */}
       </header>
