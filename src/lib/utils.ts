@@ -23,8 +23,12 @@ export function formatDate(dateString: string): string {
 export function formatRelativeDate(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // Compare local calendar days, not raw millisecond difference.
+  // This prevents a workout at 23:30 local time showing as "Today" the next morning.
+  const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const localNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((localNow.getTime() - localDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
