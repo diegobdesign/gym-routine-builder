@@ -25,7 +25,7 @@ export function WorkoutHistoryCard({ workout, onClick }: WorkoutHistoryCardProps
               <ChevronRight className="w-5 h-5 text-text-secondary flex-shrink-0 ml-2" />
             </div>
             <div className="flex items-center gap-4 text-sm text-text-secondary">
-              <span>{formatRelativeDate(workout.ended_at || workout.started_at)}</span>
+              <span>{formatRelativeDate(workout.started_at)}</span>
               <span className="flex items-center gap-1">
                 <Dumbbell className="w-3.5 h-3.5" />
                 {setsCount} sets
