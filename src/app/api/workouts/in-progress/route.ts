@@ -1,8 +1,30 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/server";
 
+// Sessions still marked in_progress this long after start are treated as
+// orphaned (tab closed, app crashed, gym session interrupted) and auto-
+// abandoned. 12h covers a realistic morning + afternoon split day; anything
+// longer is a stale session, not a real workout.
+const STALE_SESSION_HOURS = 12;
+
 export async function GET() {
   try {
+    const cutoff = new Date(
+      Date.now() - STALE_SESSION_HOURS * 60 * 60 * 1000
+    ).toISOString();
+
+    // Reap stale sessions first so they stop surfacing.
+    const { error: reapError } = await supabase
+      .from("workout_sessions")
+      .update({ status: "abandoned", ended_at: new Date().toISOString() })
+      .eq("status", "in_progress")
+      .lt("started_at", cutoff);
+
+    if (reapError) {
+      console.error("Error reaping stale sessions:", reapError);
+      // Don't fail the request — surface what's fresh even if reap failed.
+    }
+
     const { data, error } = await supabase
       .from("workout_sessions")
       .select(

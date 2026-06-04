@@ -69,9 +69,15 @@ function estimateDurationMin(routine: RoutineWithItems): number | null {
   return Math.max(10, min);
 }
 
-function elapsedMin(startedAt: string): number {
-  const min = Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000);
-  return Math.max(0, min);
+function elapsedLabel(startedAt: string): string {
+  const min = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000)
+  );
+  if (min < 90) return `${min} min`;
+  const hours = Math.floor(min / 60);
+  const remainder = min % 60;
+  return remainder === 0 ? `${hours} hr` : `${hours} hr ${remainder} min`;
 }
 
 export default function TodayPage() {
@@ -262,7 +268,7 @@ interface ResumeHeroProps {
 
 function ResumeHero({ session, todaysRoutineName, onResume }: ResumeHeroProps) {
   const setCount = session.workout_sets?.length ?? 0;
-  const elapsed = elapsedMin(session.started_at);
+  const elapsed = elapsedLabel(session.started_at);
   const routineName = session.routine?.name ?? "Workout";
   return (
     <section>
@@ -274,8 +280,8 @@ function ResumeHero({ session, todaysRoutineName, onResume }: ResumeHeroProps) {
           <h2 className="text-2xl font-bold text-text-primary">{routineName}</h2>
           <p className="text-sm text-text-secondary">
             {setCount === 0
-              ? `Started ${elapsed} min ago`
-              : `${setCount} set${setCount === 1 ? "" : "s"} done · ${elapsed} min in`}
+              ? `Started ${elapsed} ago`
+              : `${setCount} set${setCount === 1 ? "" : "s"} done · ${elapsed} in`}
           </p>
           <Button onClick={onResume} size="lg" className="w-full">
             <Play className="w-4 h-4 mr-1" />
