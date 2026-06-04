@@ -12,11 +12,15 @@ CREATE TABLE machines (
 );
 
 -- routines
+-- assigned_weekdays: 0 = Sunday, 6 = Saturday (matches JS Date.getDay()).
+-- Uniqueness within array enforced at the API layer (Postgres disallows
+-- subqueries in CHECK constraints).
 CREATE TABLE routines (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   notes TEXT,
-  is_default BOOLEAN DEFAULT FALSE,
+  assigned_weekdays SMALLINT[] NOT NULL DEFAULT '{}'::SMALLINT[]
+    CHECK (assigned_weekdays <@ ARRAY[0,1,2,3,4,5,6]::SMALLINT[]),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -34,9 +38,10 @@ CREATE TABLE routine_items (
 );
 
 -- workout_sessions
+-- routine_id ON DELETE SET NULL: history persists when the routine is deleted.
 CREATE TABLE workout_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  routine_id UUID REFERENCES routines(id),
+  routine_id UUID REFERENCES routines(id) ON DELETE SET NULL,
   started_at TIMESTAMPTZ DEFAULT NOW(),
   ended_at TIMESTAMPTZ,
   status TEXT DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'abandoned'))
@@ -105,3 +110,59 @@ CREATE TRIGGER update_routines_updated_at
   BEFORE UPDATE ON routines
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- RPC: routines_set_weekdays
+-- Atomically assigns the given weekdays to the given routine, stripping those
+-- days from every other routine in the same transaction. Enforces the
+-- one-routine-per-day invariant at the DB layer.
+CREATE OR REPLACE FUNCTION routines_set_weekdays(
+  p_routine_id UUID,
+  p_days SMALLINT[]
+) RETURNS routines AS $$
+DECLARE
+  updated_routine routines;
+BEGIN
+  UPDATE routines
+    SET assigned_weekdays = ARRAY(
+      SELECT unnest(assigned_weekdays)
+      EXCEPT
+      SELECT unnest(p_days)
+    )
+    WHERE id <> p_routine_id
+      AND assigned_weekdays && p_days;
+
+  UPDATE routines
+    SET assigned_weekdays = p_days
+    WHERE id = p_routine_id
+    RETURNING * INTO updated_routine;
+
+  RETURN updated_routine;
+END;
+$$ LANGUAGE plpgsql;
+
+-- RPC: routine_last_sets
+-- Returns the most recent recorded set per routine_item for a given routine,
+-- across all completed sessions. Used by Preview screen to surface
+-- last-used weight per machine.
+CREATE OR REPLACE FUNCTION routine_last_sets(p_routine_id UUID)
+RETURNS TABLE (
+  routine_item_id UUID,
+  weight NUMERIC,
+  actual_reps INTEGER,
+  completed_at TIMESTAMPTZ
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT ON (ws.routine_item_id)
+    ws.routine_item_id,
+    ws.weight,
+    ws.actual_reps,
+    ws.completed_at
+  FROM workout_sets ws
+  JOIN workout_sessions s ON s.id = ws.session_id
+  JOIN routine_items ri ON ri.id = ws.routine_item_id
+  WHERE s.status = 'completed'
+    AND ri.routine_id = p_routine_id
+  ORDER BY ws.routine_item_id, ws.completed_at DESC;
+END;
+$$ LANGUAGE plpgsql;

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP — per-project Supabase config (may contain PAT if OAuth path fails)
+.mcp.json

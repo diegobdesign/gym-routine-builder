@@ -33,7 +33,6 @@ export async function POST(
       .insert({
         name: `${original.name} (Copy)`,
         notes: original.notes,
-        is_default: false,
       })
       .select()
       .single();

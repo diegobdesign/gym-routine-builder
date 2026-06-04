@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const defaultOnly = searchParams.get("default") === "true";
-
-    let query = supabase
+    const { data, error } = await supabase
       .from("routines")
       .select(
         `
@@ -18,12 +15,6 @@ export async function GET(request: NextRequest) {
       `
       )
       .order("created_at", { ascending: false });
-
-    if (defaultOnly) {
-      query = query.eq("is_default", true);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching routines:", error);
