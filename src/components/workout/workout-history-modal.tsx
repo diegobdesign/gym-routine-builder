@@ -28,7 +28,7 @@ export function WorkoutHistoryModal({ workout, isOpen, onClose }: WorkoutHistory
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={workout.routine.name}
+      title={workout.routine?.name ?? "Workout"}
     >
       <div className="-mt-2 mb-4">
         <p className="text-sm text-text-secondary">

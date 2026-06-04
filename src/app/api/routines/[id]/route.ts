@@ -37,15 +37,46 @@ export async function GET(
     }
 
     // Sort routine_items by position
-    const sortedData = {
-      ...data,
-      routine_items: data.routine_items?.sort(
-        (a: { position: number }, b: { position: number }) =>
-          a.position - b.position
-      ),
+    const sortedItems = data.routine_items?.sort(
+      (a: { position: number }, b: { position: number }) =>
+        a.position - b.position
+    ) ?? [];
+
+    // Attach last-used weight per routine_item via RPC
+    const { data: lastSets, error: lastSetsError } = await supabase.rpc(
+      "routine_last_sets",
+      { p_routine_id: id }
+    );
+
+    if (lastSetsError) {
+      console.error("Error fetching last sets:", lastSetsError);
+    }
+
+    type LastSet = {
+      routine_item_id: string;
+      weight: number;
+      actual_reps: number | null;
+      completed_at: string;
     };
 
-    return NextResponse.json(sortedData);
+    const lastByItem = new Map<string, LastSet>();
+    for (const ls of (lastSets ?? []) as LastSet[]) {
+      lastByItem.set(ls.routine_item_id, ls);
+    }
+
+    const enrichedItems = sortedItems.map(
+      (item: { id: string } & Record<string, unknown>) => {
+        const last = lastByItem.get(item.id);
+        return {
+          ...item,
+          last_weight: last?.weight ?? null,
+          last_actual_reps: last?.actual_reps ?? null,
+          last_recorded_at: last?.completed_at ?? null,
+        };
+      }
+    );
+
+    return NextResponse.json({ ...data, routine_items: enrichedItems });
   } catch (error) {
     console.error("Error in routine API:", error);
     return NextResponse.json(

@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { Star, Dumbbell } from "lucide-react";
+import { Dumbbell, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { StartWorkoutButton } from "./start-workout-button";
 import type { RoutineWithItems } from "@/types";
 
 interface RoutineCardProps {
   routine: RoutineWithItems;
 }
 
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
 export function RoutineCard({ routine }: RoutineCardProps) {
   const machineCount = routine.routine_items?.length || 0;
+  const assignedLabel =
+    routine.assigned_weekdays.length > 0
+      ? [...routine.assigned_weekdays]
+          .sort((a, b) => a - b)
+          .map((d) => WEEKDAY_SHORT[d])
+          .join(" · ")
+      : null;
 
   return (
     <Link href={`/routines/${routine.id}`}>
@@ -19,14 +27,14 @@ export function RoutineCard({ routine }: RoutineCardProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-text-primary">
-                  {routine.name}
-                </h3>
-                {routine.is_default && (
-                  <Star className="w-4 h-4 text-status-warning fill-status-warning" />
-                )}
-              </div>
+              <h3 className="font-semibold text-text-primary">
+                {routine.name}
+              </h3>
+              {assignedLabel && (
+                <p className="text-xs text-accent-green mt-0.5 font-medium tracking-wide">
+                  {assignedLabel}
+                </p>
+              )}
               {routine.notes && (
                 <p className="text-sm text-text-secondary mt-1 line-clamp-2">
                   {routine.notes}
@@ -42,10 +50,7 @@ export function RoutineCard({ routine }: RoutineCardProps) {
                 {machineCount} {machineCount === 1 ? "machine" : "machines"}
               </span>
             </div>
-
-            <div onClick={(e) => e.preventDefault()}>
-              <StartWorkoutButton routineId={routine.id} size="sm" />
-            </div>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </div>
         </CardContent>
       </Card>

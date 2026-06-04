@@ -245,7 +245,7 @@ export default function WorkoutPlayerPage() {
         </button>
         <div className="text-center">
           <h1 className="font-semibold text-text-primary">
-            {session.routine.name}
+            {session.routine?.name ?? "Workout"}
           </h1>
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <p className="text-sm text-text-secondary">
