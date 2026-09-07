@@ -5,7 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key';
 
+// The gym app lives in the `gym` schema of the AIwD shared Supabase project (merged 2026-09-07).
 export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  db: { schema: 'gym' },
   auth: {
     autoRefreshToken: false,
     persistSession: false,
